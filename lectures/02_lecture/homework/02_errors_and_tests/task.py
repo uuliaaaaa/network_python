@@ -21,9 +21,10 @@
     Покрыть все эндпоинты.
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import asyncio
 
 app = FastAPI()
 
@@ -52,19 +53,22 @@ def list_items():
 
 @app.get("/items/{item_id}")
 def get_item(item_id: int):
-    # TODO:
-    raise NotImplementedError
+    if item_id not in ITEMS:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return ITEMS[item_id]
 
 
 @app.post("/items", status_code=201)
 def create_item(item: ItemCreate):
-    # TODO:
-    raise NotImplementedError
+    global NEXT_ID
+    new_item = {"id": NEXT_ID, "name": item.name}
+    ITEMS[NEXT_ID] = new_item
+    NEXT_ID += 1
+    return new_item
 
 
 @app.get("/items/{item_id}/counter")
 def get_counter(item_id: int):
-    # TODO:
     global COUNTER
     COUNTER += 1
     return {"counter": COUNTER}
@@ -72,23 +76,28 @@ def get_counter(item_id: int):
 
 @app.put("/items/{item_id}")
 def update_item(item_id: int, update: ItemUpdate):
-    # TODO:
-    raise NotImplementedError
+    if item_id not in ITEMS:
+        raise HTTPException(status_code=404, detail="Item not found")
+    ITEMS[item_id]["name"] = update.name
+    return ITEMS[item_id]
 
 
 @app.delete("/items/{item_id}")
 def delete_item(item_id: int):
-    # TODO:
-    raise NotImplementedError
+    if item_id not in ITEMS:
+        raise HTTPException(status_code=404, detail="Item not found")
+    del ITEMS[item_id]
+    return JSONResponse(status_code=204, content=None)
 
 
 @app.get("/divide")
 def divide(a: int, b: int):
-    # TODO:
-    raise NotImplementedError
+    if b == 0:
+        raise HTTPException(status_code=400, detail="Division by zero")
+    return {"result": a / b}
 
 
 @app.get("/slow-sync")
 async def slow_sync():
-    # TODO:
-    raise NotImplementedError
+    await asyncio.sleep(0.5)
+    return {"status": "done"}
